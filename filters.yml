@@ -1,0 +1,71 @@
+# ── Keyword Filters ──────────────────────────────────────────────
+# Applied to post title + selftext (case-insensitive)
+keywords:
+  # Post MUST contain at least one of these (leave empty to skip this filter)
+  include: []
+    # - game dev
+    # - indie
+    # - automation
+
+  # Post is EXCLUDED if it contains any of these
+  exclude:
+    - hiring
+    - job posting
+    - salary thread
+    - "[nsfw]"
+    - onlyfans
+    - crypto airdrop
+
+# ── Score & Engagement Thresholds ────────────────────────────────
+thresholds:
+  min_score: 2           # minimum post score (upvotes)
+  min_comments: 0        # minimum number of comments
+  max_comments: 500      # skip mega-threads (too noisy)
+  max_age_hours: 24      # how old a post can be (in hours)
+
+# ── Post Type Filter ────────────────────────────────────────────
+post_type:
+  # "all", "self_only", or "link_only"
+  allow: "all"
+
+# ── Flair Filters ───────────────────────────────────────────────
+flairs:
+  # Only include posts with these flairs (empty = allow all flairs)
+  include: []
+    # - Discussion
+    # - Question
+
+  # Exclude posts with these flairs
+  exclude:
+    - Meme
+    - Shitpost
+    - NSFW
+
+# ── Status Filters ──────────────────────────────────────────────
+# Which post statuses to keep
+allowed_statuses:
+  - active
+  # - archived
+  # - blocked
+  # - inactive
+
+# ── AI Engagement Preferences ───────────────────────────────────
+# These are passed to the OpenAI prompt to guide engagement scoring.
+# They don't filter posts — they influence the Yes/Maybe/No decision.
+ai_preferences:
+  prefer_topics:
+    - posts asking for help or advice
+    - posts sharing a project or prototype
+    - genuine discussions about creative process or tools
+    - posts where the author seems stuck on a technical problem
+
+  avoid_topics:
+    - pure meme or humor posts with no substance
+    - self-promotion spam
+    - posts that already have 50+ high-quality comments
+    - political or controversial flame-bait
+
+  engagement_notes: >
+    Prioritize posts where a thoughtful, helpful comment would
+    genuinely add value. Deprioritize posts where the conversation
+    is already saturated or where commenting would feel forced.
