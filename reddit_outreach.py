@@ -44,7 +44,7 @@ if not SPREADSHEET_ID:
 # ── Constants ────────────────────────────────────────────────────────────────
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TOKEN_FILE = os.path.join(SCRIPT_DIR, "..", "youtube-creators", "token.json")
+TOKEN_FILE = os.path.join(SCRIPT_DIR, "token.json")
 PROGRESS_FILE = os.path.join(SCRIPT_DIR, "progress.json")
 
 OAUTH_CLIENT_CONFIG = {
