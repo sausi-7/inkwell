@@ -32,8 +32,8 @@ Most outreach tools start with a contact database and blast cold messages. Outre
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/outreachpilot.git
-cd outreachpilot
+git clone https://github.com/sausi-7/reddit-outreach.git
+cd reddit-outreach
 
 python3 -m venv .venv
 source .venv/bin/activate    # On Windows: .venv\Scripts\activate
