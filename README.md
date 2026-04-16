@@ -4,8 +4,10 @@
 
 Find real people with real problems you can actually help — across every platform where they talk about it.
 
+[![CI](https://github.com/sausi-7/reddit-outreach/actions/workflows/ci.yml/badge.svg)](https://github.com/sausi-7/reddit-outreach/actions/workflows/ci.yml)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ---
 
@@ -185,15 +187,25 @@ Control which posts get analyzed. Filters run **before** AI, saving API costs:
 | `allowed_statuses` | Which post statuses to keep | `[active]` |
 | `ai_preferences` | Guides AI engagement decisions (not a hard filter) | see file |
 
-### LLM Model — `.env`
+### LLM Provider — `.env`
 
-Change the AI model by setting in `.env`:
+OutreachPilot uses [LiteLLM](https://docs.litellm.ai/) so one setting switches providers. Pick any model and set the matching API key:
 
 ```
-LLM_MODEL=gpt-4o-mini          # Default (cheap, fast)
-LLM_MODEL=gpt-4o               # More capable
-LLM_MODEL=claude-sonnet-4-6    # Anthropic Claude (via LiteLLM, Phase 1)
+# OpenAI
+OPENAI_API_KEY=sk-...
+LLM_MODEL=gpt-4o-mini
+
+# Anthropic Claude
+ANTHROPIC_API_KEY=sk-ant-...
+LLM_MODEL=claude-sonnet-4-6
+
+# Ollama (local, no key needed — just have Ollama running)
+LLM_MODEL=ollama/llama3
+OLLAMA_API_BASE=http://localhost:11434
 ```
+
+Any model LiteLLM supports works — Gemini, Groq, Together, Mistral, etc. See [LiteLLM providers](https://docs.litellm.ai/docs/providers).
 
 ---
 
@@ -334,7 +346,8 @@ python -m outreachpilot serve --port 3000 --reload
 ## Roadmap
 
 - [x] **Phase 0** — Modular architecture (scanners, analyzers, filters, exporters, storage)
-- [ ] **Phase 1** — Web dashboard with FastAPI + HTMX, LiteLLM multi-provider support, scheduled scans
+- [x] **LiteLLM multi-provider support** — OpenAI, Claude, Ollama, and any LiteLLM-supported provider
+- [ ] **Phase 1** — Web dashboard with FastAPI + HTMX, config wizard, scheduled scans
 - [ ] **Phase 2** — Hacker News + Product Hunt scanners, campaign management, feedback loop
 - [ ] **Phase 3** — Twitter/X + IndieHackers scanners, ML-based scoring, plugin system
 - [ ] **Phase 4** — Landing page, pip-installable package, community launch

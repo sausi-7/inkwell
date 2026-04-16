@@ -1,52 +1,72 @@
-"""LLM client wrapper — supports OpenAI directly, with LiteLLM as optional backend."""
+"""LLM client wrapper.
+
+Uses LiteLLM so the same code path works across OpenAI, Anthropic Claude, Ollama,
+and anything else LiteLLM supports. Provider is chosen by the LLM_MODEL env var:
+
+    gpt-4o-mini            → OpenAI        (needs OPENAI_API_KEY)
+    claude-sonnet-4-6      → Anthropic     (needs ANTHROPIC_API_KEY)
+    ollama/llama3          → local Ollama  (needs OLLAMA_API_BASE, defaults to
+                                            http://localhost:11434)
+"""
 
 import json
 import logging
 import time
 
-from openai import OpenAI
+import litellm
 
-from outreachpilot.config import OPENAI_API_KEY, LLM_MODEL, LLM_TEMPERATURE, LLM_MAX_TOKENS
+from outreachpilot.config import LLM_MAX_TOKENS, LLM_MODEL, LLM_TEMPERATURE
 
 logger = logging.getLogger(__name__)
 
-_client: OpenAI | None = None
+
+def _supports_native_json_mode(model: str) -> bool:
+    """Return True only for providers we trust with response_format='json_object'.
+
+    OpenAI's JSON mode is rock-solid. Claude and Ollama support is newer / uneven,
+    so we fall back to instruction-based JSON (the prompt already asks for it) plus
+    fence stripping. Keeps the swap low-risk; we can widen this as providers mature.
+    """
+    return model.startswith(("gpt-", "openai/"))
 
 
-def get_client() -> OpenAI:
-    global _client
-    if _client is None:
-        _client = OpenAI(api_key=OPENAI_API_KEY)
-    return _client
+def _strip_code_fences(text: str) -> str:
+    """Strip a leading ```json ... ``` fence that some models add around JSON."""
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+        if text.endswith("```"):
+            text = text[:-3]
+    return text.strip()
 
 
 def chat_completion(prompt: str, retries: int = 3) -> dict | None:
-    """Send a prompt and parse JSON response, with retries."""
-    client = get_client()
+    """Send a prompt, parse JSON response, retry on transient failures."""
+    kwargs: dict = {
+        "model": LLM_MODEL,
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens": LLM_MAX_TOKENS,
+        "temperature": LLM_TEMPERATURE,
+    }
+    if _supports_native_json_mode(LLM_MODEL):
+        kwargs["response_format"] = {"type": "json_object"}
 
     for attempt in range(retries):
         try:
-            response = client.chat.completions.create(
-                model=LLM_MODEL,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=LLM_MAX_TOKENS,
-                temperature=LLM_TEMPERATURE,
-            )
-            text = response.choices[0].message.content.strip()
-
-            # Strip markdown code fences if present
-            if text.startswith("```"):
-                text = text.split("\n", 1)[1] if "\n" in text else text[3:]
-                if text.endswith("```"):
-                    text = text[:-3]
-                text = text.strip()
-
+            response = litellm.completion(**kwargs)
+            text = _strip_code_fences(response.choices[0].message.content.strip())
             return json.loads(text)
-        except (json.JSONDecodeError, Exception) as e:
+        except json.JSONDecodeError as e:
             if attempt < retries - 1:
-                logger.warning("LLM parse error (%s), retrying...", e)
+                logger.warning("LLM returned non-JSON (%s), retrying...", e)
                 time.sleep(2)
             else:
-                logger.error("LLM analysis failed: %s", e)
+                logger.error("LLM returned non-JSON after %d attempts", retries)
+                return None
+        except Exception as e:
+            if attempt < retries - 1:
+                logger.warning("LLM call failed (%s), retrying...", e)
+                time.sleep(2)
+            else:
+                logger.error("LLM call failed after %d attempts: %s", retries, e)
                 return None
     return None

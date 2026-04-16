@@ -3,7 +3,6 @@
 import datetime
 import json
 import logging
-from pathlib import Path
 
 from outreachpilot.config import DATA_DIR
 

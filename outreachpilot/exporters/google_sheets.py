@@ -2,8 +2,6 @@
 
 import json
 import logging
-import os
-from pathlib import Path
 
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
