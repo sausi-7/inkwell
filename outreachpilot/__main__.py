@@ -28,7 +28,7 @@ def cmd_scan(args):
     """Run a scan — equivalent to the original reddit_outreach.py."""
     from outreachpilot.config import (
         load_subreddits, load_personality, load_filters,
-        get_max_post_age_hours, SPREADSHEET_ID, COLUMNS, ensure_data_dirs,
+        get_max_post_age_hours, SPREADSHEET_ID, ensure_data_dirs,
     )
     from outreachpilot.scanners.reddit import RedditScanner
     from outreachpilot.filters.rule_filter import apply_pre_filters
@@ -71,7 +71,8 @@ def cmd_scan(args):
 
     # Scan
     scanner = RedditScanner()
-    pending_rows = []
+    pending_rows = []        # buffer for the next Sheets flush (cleared per subreddit)
+    all_rows = []            # every row produced this run (kept for CSV + fallback)
     all_signal_dicts = []
 
     try:
@@ -91,7 +92,7 @@ def cmd_scan(args):
                     logger.info("  No posts in last %dh (fetched %d, all filtered out)", max_age, raw_count)
                 else:
                     logger.info("  No posts in last %dh", max_age)
-                pending_rows.append({
+                empty_row = {
                     "Subreddit": f"r/{subreddit}",
                     "Post title": "[No last-24h post detected in accessible /new snapshot]",
                     "Post link": "",
@@ -107,7 +108,9 @@ def cmd_scan(args):
                     "Source URL(s)": f"https://www.reddit.com/r/{subreddit}/new/.json?limit=5",
                     "Created UTC": "",
                     "Age (hrs)": "",
-                })
+                }
+                pending_rows.append(empty_row)
+                all_rows.append(empty_row)
             else:
                 logger.info("  Found %d posts (from %d raw)", len(signals), raw_count)
                 for signal in signals:
@@ -149,6 +152,7 @@ def cmd_scan(args):
                         "Age (hrs)": str(age_hrs),
                     }
                     pending_rows.append(row)
+                    all_rows.append(row)
 
                     # Also build a signal dict for local storage
                     all_signal_dicts.append({
@@ -202,10 +206,11 @@ def cmd_scan(args):
         if all_signal_dicts:
             save_signals(all_signal_dicts)
 
-        # CSV export
-        if csv_exporter and all_signal_dicts:
+        # CSV export — uses all_rows (every row produced this run), not the
+        # Sheets-flush buffer which gets cleared per subreddit.
+        if csv_exporter and all_rows:
             csv_exporter.export(
-                [{col: s.get(col, "") for col in COLUMNS} for s in pending_rows],
+                all_rows,
                 config={"filename": f"outreach_{today}.csv"},
             )
 
