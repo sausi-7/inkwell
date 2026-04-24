@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Inkwell · Scan{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Scan</h1>
+<p class="page-subtitle">Sweep your subreddits. No LLM tokens are spent here — voice drafts are generated per-signal, on demand.</p>
+
+<div class="card">
+  <div class="flex-between">
+    <div>
+      <div class="card-title mb-0">Start a scan</div>
+      <div class="card-muted small" id="scan-summary">Loading…</div>
+    </div>
+    <div class="row-inline">
+      <span id="scan-status-pill" class="pill pill-muted hidden">idle</span>
+      <label class="small muted" title="Scan 3 subreddits — finishes in seconds, ideal for a first run or when Reddit is throttling.">
+        <input type="checkbox" id="quick-scan" checked> Quick scan (3 subs)
+      </label>
+      <label class="small muted" title="Forget which subreddits were already completed today.">
+        <input type="checkbox" id="reset-progress"> Reset progress
+      </label>
+      <button type="button" class="btn btn-primary" id="start-scan">Start scan</button>
+      <button type="button" class="btn btn-outline hidden" id="stop-scan">Stop</button>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3 class="card-title">Log</h3>
+  <pre id="scan-log" class="scan-log"><span class="scan-log-empty">(no scan running)</span></pre>
+</div>
+
+<div class="card">
+  <div class="flex-between">
+    <h3 class="card-title mb-0">Signals</h3>
+    <div class="row-inline">
+      <select id="date-picker" style="width: auto;"></select>
+    </div>
+  </div>
+  <div id="signals-wrap">
+    <p class="muted small mt-2" id="signals-empty">No signals yet. Run a scan above.</p>
+    <table class="table hidden" id="signals-table">
+      <thead>
+        <tr>
+          <th>Engage</th>
+          <th>Subreddit</th>
+          <th>Title</th>
+          <th>Score</th>
+          <th>Age</th>
+          <th>Why</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Draft modal (hidden by default) -->
+<div id="draft-modal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3 class="modal-title" id="draft-title">Draft</h3>
+    <div class="draft-block">
+      <h4>Reply to coolest comment</h4>
+      <pre class="draft-text" id="draft-reply"></pre>
+      <button class="btn btn-outline small mt-1" data-copy="draft-reply">Copy</button>
+    </div>
+    <div class="draft-block">
+      <h4>Top-level post comment</h4>
+      <pre class="draft-text" id="draft-post"></pre>
+      <button class="btn btn-outline small mt-1" data-copy="draft-post">Copy</button>
+    </div>
+    <div class="row-inline mt-3">
+      <button class="btn btn-outline" id="draft-regenerate">Regenerate</button>
+      <button class="btn" id="draft-close">Close</button>
+      <span class="small muted" id="draft-cost"></span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/scan.js"></script>
+{% endblock %}

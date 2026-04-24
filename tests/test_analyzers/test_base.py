@@ -1,6 +1,6 @@
-"""Tests for outreachpilot.analyzers.base."""
+"""Tests for inkwell.analyzers.base."""
 
-from outreachpilot.analyzers.base import Analysis
+from inkwell.analyzers.base import Analysis
 
 
 def test_error_fallback_sets_engage_no():

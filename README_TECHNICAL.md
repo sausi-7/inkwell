@@ -1,6 +1,6 @@
-# Technical Documentation — OutreachPilot
+# Technical Documentation — Inkwell
 
-Architecture, design decisions, data flows, and extension guide for OutreachPilot.
+Architecture, design decisions, data flows, and extension guide for Inkwell.
 
 ---
 
@@ -142,7 +142,7 @@ Auto-discovers scanners on first access. Scanners self-register on import:
 registry.register(RedditScanner())
 
 # To use:
-from outreachpilot.scanners import get_scanner
+from inkwell.scanners import get_scanner
 scanner = get_scanner("reddit")
 signals = scanner.scan(["Entrepreneur", "SaaS"], max_age_hours=24)
 ```
@@ -375,7 +375,7 @@ get_feedback_for_signal("reddit_abc123")
 ## Data Flow — Full Scan Cycle
 
 ```
-1. CLI: python -m outreachpilot scan
+1. CLI: python -m inkwell scan
 2. Load config: subreddits.yml, personality.yml, filters.yml
 3. Load progress checkpoint (skip completed subreddits)
 4. For each subreddit:
@@ -436,11 +436,11 @@ All in `config/` directory (falls back to project root for backward compatibilit
 
 ---
 
-## Extending OutreachPilot
+## Extending Inkwell
 
 ### Add a New Platform Scanner
 
-1. Create `outreachpilot/scanners/your_platform.py`
+1. Create `inkwell/scanners/your_platform.py`
 2. Create a class with `name` attribute and `scan()` method
 3. Return `list[RawSignal]` with platform-specific metadata in `metadata` dict
 4. Call `registry.register(YourScanner())` at module level
@@ -448,19 +448,19 @@ All in `config/` directory (falls back to project root for backward compatibilit
 
 ### Add a New Exporter
 
-1. Create `outreachpilot/exporters/your_exporter.py`
+1. Create `inkwell/exporters/your_exporter.py`
 2. Implement the `Exporter` protocol with `name` and `export()` method
 3. Add CLI flag in `__main__.py` if needed
 
 ### Add a New Filter
 
-1. Create `outreachpilot/filters/your_filter.py`
+1. Create `inkwell/filters/your_filter.py`
 2. Accept `list[RawSignal]` and return filtered `list[RawSignal]`
 3. Call from the scan loop in `__main__.py`
 
 ### Customize AI Prompts
 
-Edit `outreachpilot/analyzers/pipeline.py` — the prompt template is in `analyze_signal()`. The expected JSON keys must match what the export row builder reads.
+Edit `inkwell/analyzers/pipeline.py` — the prompt template is in `analyze_signal()`. The expected JSON keys must match what the export row builder reads.
 
 ### Add a New Output Column
 

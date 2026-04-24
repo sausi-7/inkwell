@@ -18,10 +18,12 @@ keywords:
 
 # ── Score & Engagement Thresholds ────────────────────────────────
 thresholds:
-  min_score: 2           # minimum post score (upvotes)
-  min_comments: 0        # minimum number of comments
-  max_comments: 500      # skip mega-threads (too noisy)
-  max_age_hours: 24      # how old a post can be (in hours)
+  min_score: 5                  # minimum post score (upvotes) — higher = less noise, faster scan
+  min_comments: 1               # at least one reply (shows the post has traction)
+  max_comments: 200             # skip mega-threads (already saturated)
+  max_age_hours: 24             # how old a post can be (in hours)
+  max_posts_per_subreddit: 10   # NEW — cap on how many filtered posts to fully hydrate
+                                # (prevents 100-comment-fetches per sub)
 
 # ── Post Type Filter ────────────────────────────────────────────
 post_type:

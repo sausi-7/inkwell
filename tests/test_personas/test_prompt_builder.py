@@ -1,6 +1,6 @@
-"""Tests for outreachpilot.personas.prompt_builder."""
+"""Tests for inkwell.personas.prompt_builder."""
 
-from outreachpilot.personas.prompt_builder import build_ai_prefs_block, build_personality_block
+from inkwell.personas.prompt_builder import build_ai_prefs_block, build_personality_block
 
 
 def test_empty_personality_returns_default_guidance():

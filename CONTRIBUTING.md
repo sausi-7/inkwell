@@ -1,34 +1,33 @@
-# Contributing to OutreachPilot
+# Contributing to Inkwell
 
-Thank you for your interest in contributing to OutreachPilot! Whether you're fixing a bug, adding a feature, improving docs, or suggesting ideas — every contribution helps entrepreneurs find better conversations.
+Thank you for your interest in contributing to Inkwell! Whether you're fixing a bug, adding a feature, improving docs, or suggesting ideas — every contribution helps entrepreneurs find better conversations.
 
 ---
 
 ## Ways to Contribute
 
-### Good First Issues
+### Browse open starter tickets
 
-If you're new to the project, these are great starting points:
+The live list lives on GitHub — [**good first issues**](https://github.com/sausi-7/inkwell/issues?q=is%3Aopen+label%3A%22good+first+issue%22). Filter by category:
 
-- **Add a Hacker News scanner** — Free API via `hn.algolia.com`, no auth needed
-- **Add a Product Hunt scanner** — GraphQL API, requires developer token
-- **Add a Dev.to scanner** — Public REST API, no auth needed
-- **Add a Notion exporter** — Export signals to a Notion database
-- **Add a Slack webhook exporter** — Post high-value signals to a Slack channel
-- **Write tests** — We need tests for scanners, filters, analyzers, and storage
-- **Improve AI prompts** — Better prompts = better suggestions
-- **Fix typos or improve docs** — Always welcome
+- [**scanner**](https://github.com/sausi-7/inkwell/issues?q=is%3Aopen+label%3A%22scanner%22) — new platform integration (HN, Product Hunt, Dev.to, Lemmy…)
+- [**exporter**](https://github.com/sausi-7/inkwell/issues?q=is%3Aopen+label%3A%22exporter%22) — new output target (Notion, Airtable, Slack…)
+- [**persona**](https://github.com/sausi-7/inkwell/issues?q=is%3Aopen+label%3A%22persona%22) — contribute a persona YAML to the marketplace
+- [**help wanted**](https://github.com/sausi-7/inkwell/issues?q=is%3Aopen+label%3A%22help+wanted%22) — bigger features
+
+Comment on an issue to claim it. Maintainer will assign.
 
 ### Feature Development
 
-Bigger features we'd love help with:
+Bigger roadmap bets that would love a second set of hands:
 
-- **Web dashboard** (Phase 1) — FastAPI + Jinja2 + HTMX frontend
-- **LiteLLM integration** — Support Claude, Ollama, Groq alongside OpenAI
-- **Campaign management UI** — Kanban board for tracking signal engagement
-- **Feedback loop** — Rate signal quality, use ratings to improve AI scoring
-- **Scheduled scans** — APScheduler integration for cron-like recurring scans
+- **Auto-persona from post history** — Paste a Reddit/HN username → Inkwell fits a persona from the last 200 comments. Killer feature. ([#15](https://github.com/sausi-7/inkwell/issues/15))
+- **Streaming drafts** — Token-by-token via LiteLLM streaming. ([#14](https://github.com/sausi-7/inkwell/issues/14))
+- **Daily email digest** — APScheduler cron → top-N signals to your inbox each morning. ([#13](https://github.com/sausi-7/inkwell/issues/13))
+- **Feedback loop** — 1–5 star ratings feed back into `ai_preferences` weighting
 - **Plugin system** — Entry-point based discovery for community scanners/exporters
+
+See the full direction in [**docs/ROADMAP.md**](docs/ROADMAP.md).
 
 ### Reporting Bugs
 
@@ -59,8 +58,8 @@ Open an issue with the `feature` label. Describe:
 
 ```bash
 # 1. Fork the repo on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/outreachpilot.git
-cd outreachpilot
+git clone https://github.com/YOUR_USERNAME/inkwell.git
+cd inkwell
 
 # 2. Create a virtual environment
 python3 -m venv .venv
@@ -74,8 +73,8 @@ cp .env.example .env
 # Edit .env with your API keys (needed for integration tests)
 
 # 5. Verify everything works
-python -m outreachpilot --help
-python -c "from outreachpilot.config import load_subreddits; print(f'OK: {len(load_subreddits())} subreddits')"
+python -m inkwell --help
+python -c "from inkwell.config import load_subreddits; print(f'OK: {len(load_subreddits())} subreddits')"
 ```
 
 ### Running Tests
@@ -98,13 +97,13 @@ pytest -k "reddit"
 
 ```bash
 # Lint with ruff
-ruff check outreachpilot/
+ruff check inkwell/
 
 # Auto-fix lint issues
-ruff check --fix outreachpilot/
+ruff check --fix inkwell/
 
 # Format code
-ruff format outreachpilot/
+ruff format inkwell/
 ```
 
 ---
@@ -112,8 +111,8 @@ ruff format outreachpilot/
 ## Project Structure
 
 ```
-outreachpilot/
-├── outreachpilot/           # Main package
+inkwell/
+├── inkwell/           # Main package
 │   ├── scanners/            # Platform scanners (Reddit, HN, etc.)
 │   ├── analyzers/           # AI analysis engine
 │   ├── filters/             # Signal filtering
@@ -154,12 +153,12 @@ This is one of the most impactful contributions. Here's a step-by-step guide:
 ### 1. Create the scanner file
 
 ```python
-# outreachpilot/scanners/hackernews.py
+# inkwell/scanners/hackernews.py
 import logging
 import time
 
-from outreachpilot.scanners.base import RawSignal, Reply, fetch_json
-from outreachpilot.scanners import registry
+from inkwell.scanners.base import RawSignal, Reply, fetch_json
+from inkwell.scanners import registry
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +182,7 @@ registry.register(HackerNewsScanner())
 
 ### 2. Register in the registry
 
-Edit `outreachpilot/scanners/registry.py`:
+Edit `inkwell/scanners/registry.py`:
 
 ```python
 def _ensure_loaded():
@@ -191,19 +190,19 @@ def _ensure_loaded():
     if _loaded:
         return
     _loaded = True
-    from outreachpilot.scanners import reddit      # noqa: F401
-    from outreachpilot.scanners import hackernews   # noqa: F401  <-- add this
+    from inkwell.scanners import reddit      # noqa: F401
+    from inkwell.scanners import hackernews   # noqa: F401  <-- add this
 ```
 
 ### 3. Add CLI support
 
-Edit `outreachpilot/__main__.py` to add a `--hackernews` flag and call the scanner.
+Edit `inkwell/__main__.py` to add a `--hackernews` flag and call the scanner.
 
 ### 4. Write tests
 
 ```python
 # tests/test_scanners/test_hackernews.py
-from outreachpilot.scanners.hackernews import HackerNewsScanner
+from inkwell.scanners.hackernews import HackerNewsScanner
 
 def test_hackernews_scanner_has_name():
     scanner = HackerNewsScanner()
@@ -229,7 +228,7 @@ min_points: 5
 ### 1. Create the exporter file
 
 ```python
-# outreachpilot/exporters/slack_webhook.py
+# inkwell/exporters/slack_webhook.py
 import logging
 import requests
 
@@ -286,7 +285,7 @@ class SlackWebhookExporter:
 
 1. Standard library
 2. Third-party packages
-3. Local imports (`from outreachpilot...`)
+3. Local imports (`from inkwell...`)
 
 Separated by blank lines.
 
@@ -306,13 +305,13 @@ Separated by blank lines.
 3. **Test your changes:**
    ```bash
    pytest
-   ruff check outreachpilot/
+   ruff check inkwell/
    ```
 
 4. **Verify the CLI still works:**
    ```bash
-   python -m outreachpilot --help
-   python -m outreachpilot scan --no-sheets  # quick test (if you have API keys)
+   python -m inkwell --help
+   python -m inkwell scan --no-sheets  # quick test (if you have API keys)
    ```
 
 ### PR Guidelines
@@ -404,4 +403,4 @@ All contributors are recognized in the project:
 
 Open an issue with the `question` label, or start a discussion. We're happy to help you get started with your first contribution.
 
-Thank you for helping make OutreachPilot better for every entrepreneur out there.
+Thank you for helping make Inkwell better for every entrepreneur out there.

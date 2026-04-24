@@ -1,11 +1,11 @@
-# OutreachPilot
+# Inkwell
 
 **Open source AI outreach intelligence tool for entrepreneurs.**
 
 Find real people with real problems you can actually help — across every platform where they talk about it.
 
-[![CI](https://github.com/sausi-7/reddit-outreach/actions/workflows/ci.yml/badge.svg)](https://github.com/sausi-7/reddit-outreach/actions/workflows/ci.yml)
-[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
+[![CI](https://github.com/sausi-7/inkwell/actions/workflows/ci.yml/badge.svg)](https://github.com/sausi-7/inkwell/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -13,19 +13,21 @@ Find real people with real problems you can actually help — across every platf
 
 ## What It Does
 
-OutreachPilot scans communities (Reddit, Hacker News, Product Hunt, and more) for posts where people are asking for help, sharing projects, or discussing problems you can solve. It uses AI to:
+Inkwell scans communities (Reddit today; Hacker News / Product Hunt / more via community scanners) for posts where people are asking for help, sharing projects, or discussing problems you can solve. It splits the work into two clean stages:
 
-- **Summarize** each post in 1-2 sentences
-- **Score engagement potential** (Yes / Maybe / No)
-- **Identify the best comment** in each thread
-- **Generate suggested replies** written in your voice and tone
-- **Export everything** to Google Sheets, CSV, or a web dashboard
+**Scanning is free (no LLM tokens).** Rule-based heuristics pick the signal, score engagement potential (Yes / Maybe / No), summarize the post, and surface the most interesting comment. Deterministic, auditable, fast.
 
-All suggestions are written using your configured personality profile — conversational, genuine, and non-promotional.
+**Voice drafting is BYOK, on demand.** When you see a signal worth replying to, click **Draft** and Inkwell uses *your* LLM key to write a reply in *your* voice — trained on your dos, don'ts, and example comments. The key lives in your browser's localStorage and never hits the server except on that one draft request.
 
-### Why OutreachPilot?
+### Why Inkwell?
 
-Most outreach tools start with a contact database and blast cold messages. OutreachPilot flips this: it starts with **real signals** — people publicly expressing problems — and helps you engage authentically where they already are. This signal-first approach gets 2-3x higher response rates than cold outreach.
+Most outreach tools start with a contact database and blast cold messages. Inkwell flips this: it starts with **real signals** — people publicly expressing problems — and helps you engage authentically where they already are.
+
+Three things make it different:
+
+- **$0 until you draft.** Every other "AI outreach" tool bills you to scan. We don't spend a token until you ask for a reply in your voice.
+- **Your voice, not LLM-speak.** The persona is a first-class artifact (YAML). Fork someone else's. Publish your own. Replies stop sounding generic.
+- **Self-hosted, no lock-in.** One `pip install`, runs on your laptop, your data never leaves your machine. LLM provider of your choice (OpenAI, Claude, Ollama, local).
 
 ---
 
@@ -34,14 +36,18 @@ Most outreach tools start with a contact database and blast cold messages. Outre
 ### 1. Clone and Install
 
 ```bash
-git clone https://github.com/sausi-7/reddit-outreach.git
-cd reddit-outreach
+git clone https://github.com/sausi-7/inkwell.git
+cd inkwell
 
+# Create a virtualenv — keeps deps off your system Python
 python3 -m venv .venv
 source .venv/bin/activate    # On Windows: .venv\Scripts\activate
 
-pip install -e .
+# Editable install (CLI + web UI + FastAPI / LiteLLM / Jinja2 / …)
+pip install -e ".[dev]"
 ```
+
+Every `inkwell`, `python`, and `pytest` command in this README assumes the venv is active. Re-run `source .venv/bin/activate` in a fresh terminal to come back.
 
 ### 2. Configure
 
@@ -60,18 +66,45 @@ SPREADSHEET_ID=your_spreadsheet_id
 
 ### 3. Run
 
+**Recommended — Web UI:**
+
 ```bash
-# Scan Reddit and export to Google Sheets
-python -m outreachpilot scan
-
-# Scan Reddit, export to CSV, skip Sheets
-python -m outreachpilot scan --csv --no-sheets
-
-# Start the web dashboard (Phase 1)
-python -m outreachpilot serve
+python -m inkwell serve
 ```
 
-**First run:** A browser window will open for Google OAuth. Sign in and grant Sheets access. This only happens once.
+Then open [http://localhost:8000](http://localhost:8000). The landing page walks you through profile → output → BYOK key → subreddits → first scan. The key lives in your browser; the server never sees it except when you click *Draft*.
+
+**CLI — headless / cron:**
+
+```bash
+# Scan Reddit and export to Google Sheets (needs Google OAuth — one-time)
+python -m inkwell scan
+
+# Scan and export to CSV only (no Google setup required)
+python -m inkwell scan --csv --no-sheets
+
+# Generate a voice draft for a stored signal (uses your LLM key)
+python -m inkwell draft reddit_abc123 --model gpt-4o-mini
+```
+
+**First Google Sheets run:** A browser window opens for OAuth. Sign in and grant Sheets access. Happens once.
+
+---
+
+## Web UI
+
+Four pages, plain HTML/CSS/JS, no framework. Binds to `127.0.0.1` only — single-user, self-hosted.
+
+- **`/` Home** — onboarding checklist that turns green as each step is complete.
+- **`/profile`** — edit your persona visually. See the exact prompt the LLM will use.
+- **`/settings`** — pick output (CSV / Sheets / both), paste your LLM key (stored in browser localStorage, never on the server), test the Google Sheets connection and the LLM key with one click, edit filters and the subreddit list.
+- **`/scan`** — start a scan, watch SSE-streamed progress, and see signals scored as they arrive. Click **Draft** on any signal to generate a reply and a top-level comment in your voice. Drafts are cached per-signal so refreshing doesn't re-bill you.
+
+### BYOK security model
+
+- No auth. The server binds to `127.0.0.1` — do not expose it on a shared network without adding your own reverse proxy + auth.
+- The LLM key is stored in the browser's `localStorage` under `ink_llm_key`. It never lands in `.env` or any log.
+- On a draft request, the browser sends the key as the `X-LLM-Key` header. The server passes it straight to LiteLLM and does not write it anywhere.
 
 ---
 
@@ -87,18 +120,21 @@ You configure subreddits, personality, and filters
                     |
                     v
     +---------------------------------+
-    |  Pre-filter (zero AI cost)      |  Keywords, score, flairs, status
+    |  Rule-based filter + score      |  ZERO tokens — keywords, score,
+    |  (analyzers/rules.py)           |  flairs, velocity, age, Yes/Maybe/No
     +---------------------------------+
                     |
                     v
     +---------------------------------+
-    |  AI analysis per signal         |  Summary, engagement score,
-    |  (OpenAI / Claude / Ollama)     |  suggested replies in YOUR voice
+    |  Export + persist signals       |  Google Sheets, CSV, data/signals
     +---------------------------------+
                     |
-                    v
+                    v  (user clicks "Draft" in the web UI, per signal)
+                    |
     +---------------------------------+
-    |  Export                          |  Google Sheets, CSV, web dashboard
+    |  Voice drafting (BYOK)          |  LLM tokens spent ONLY here.
+    |  (analyzers/voice.py)           |  Key is per-request from browser
+    |  OpenAI / Claude / Ollama       |  localStorage — never persisted.
     +---------------------------------+
 ```
 
@@ -120,7 +156,7 @@ You configure subreddits, personality, and filters
 | Post link | Direct URL to the post |
 | Source URL(s) | API endpoints used |
 
-Only posts marked **"Yes"** get populated suggestions. `Maybe` and `No` posts show dashes to reduce noise.
+Only posts marked **"Yes"** have the coolest comment populated in the CSV/Sheets export. All three voice columns (`Coolest comment reply`, `Suggested post comment`) now show dashes by default — they're filled on demand when you click *Draft* in the web UI or run `inkwell draft <signal_id>`. This is the BYOK split: scans never burn tokens.
 
 ---
 
@@ -141,7 +177,7 @@ Simple list of subreddit names to scan:
 Two lists are included: `subreddits.yml` (21 curated) and `subreddits_1.yml` (101 broad). Switch between them:
 
 ```bash
-python -m outreachpilot scan --subreddits subreddits_1.yml
+python -m inkwell scan --subreddits subreddits_1.yml
 ```
 
 ### Personality — `config/personality.yml`
@@ -189,7 +225,7 @@ Control which posts get analyzed. Filters run **before** AI, saving API costs:
 
 ### LLM Provider — `.env`
 
-OutreachPilot uses [LiteLLM](https://docs.litellm.ai/) so one setting switches providers. Pick any model and set the matching API key:
+Inkwell uses [LiteLLM](https://docs.litellm.ai/) so one setting switches providers. Pick any model and set the matching API key:
 
 ```
 # OpenAI
@@ -225,8 +261,8 @@ Progress resets automatically each new day.
 ## Project Structure
 
 ```
-outreachpilot/
-├── outreachpilot/              # Python package
+inkwell/
+├── inkwell/              # Python package
 │   ├── __main__.py             # CLI entry point
 │   ├── app.py                  # FastAPI web app (Phase 1)
 │   ├── config.py               # Settings loader
@@ -305,25 +341,25 @@ The long string after `/d/` is your Spreadsheet ID.
 
 ```bash
 # Run Reddit scan (default: exports to Google Sheets)
-python -m outreachpilot scan
+python -m inkwell scan
 
 # Use a different subreddit list
-python -m outreachpilot scan --subreddits subreddits_1.yml
+python -m inkwell scan --subreddits subreddits_1.yml
 
 # Export to CSV instead of Sheets
-python -m outreachpilot scan --csv --no-sheets
+python -m inkwell scan --csv --no-sheets
 
 # Both CSV and Sheets
-python -m outreachpilot scan --csv
+python -m inkwell scan --csv
 
 # Verbose logging
-python -m outreachpilot scan -v
+python -m inkwell scan -v
 
 # Start web dashboard
-python -m outreachpilot serve
+python -m inkwell serve
 
 # Web dashboard on custom port with auto-reload
-python -m outreachpilot serve --port 3000 --reload
+python -m inkwell serve --port 3000 --reload
 ```
 
 ---
@@ -346,11 +382,14 @@ python -m outreachpilot serve --port 3000 --reload
 ## Roadmap
 
 - [x] **Phase 0** — Modular architecture (scanners, analyzers, filters, exporters, storage)
-- [x] **LiteLLM multi-provider support** — OpenAI, Claude, Ollama, and any LiteLLM-supported provider
-- [ ] **Phase 1** — Web dashboard with FastAPI + HTMX, config wizard, scheduled scans
-- [ ] **Phase 2** — Hacker News + Product Hunt scanners, campaign management, feedback loop
-- [ ] **Phase 3** — Twitter/X + IndieHackers scanners, ML-based scoring, plugin system
-- [ ] **Phase 4** — Landing page, pip-installable package, community launch
+- [x] **Multi-provider LLM** — OpenAI, Claude, Ollama, anything LiteLLM supports
+- [x] **BYOK analyzer split** — scans are free; voice drafting is on-demand, key-in-browser
+- [x] **Web UI** — Profile builder, settings (output + BYOK + filters), scan runner with live SSE progress and draft modal
+- [ ] **Persona marketplace** — fork/publish personas under `config/personas/`
+- [ ] **More scanners** — Hacker News, Product Hunt, Dev.to (protocol-based, ~100 LOC each)
+- [ ] **More exporters** — Notion, Airtable, Slack webhook
+- [ ] **Scheduling** — APScheduler cron for daily sweeps; email/Slack digests
+- [ ] **Feedback loop** — ratings feed back into the engagement score
 
 See [README_TECHNICAL.md](README_TECHNICAL.md) for architecture details.
 
@@ -358,21 +397,23 @@ See [README_TECHNICAL.md](README_TECHNICAL.md) for architecture details.
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Inkwell is built as an open platform — scanners, exporters, and personas are all intentionally small surfaces so a contributor can ship a real feature in an afternoon.
 
-**Quick ways to contribute:**
-- Add a new platform scanner (Hacker News, Product Hunt, Dev.to)
-- Add a new exporter (Notion, Airtable, Slack webhook)
-- Improve AI prompts for better suggestions
-- Build the web dashboard UI
-- Write tests
-- Report bugs or suggest features
+**Three-minute path in:**
+
+1. 👀 Browse **[open good-first-issues](https://github.com/sausi-7/inkwell/issues?q=is%3Aopen+label%3A%22good+first+issue%22)** — scanner / exporter / persona / docs. Each has clear acceptance criteria and files-to-touch.
+2. 💬 Comment "I'd like this" — you'll get assigned.
+3. 🛠️ Read [**CONTRIBUTING.md**](CONTRIBUTING.md) for dev setup, code style, and the step-by-step for new scanners & exporters. Read [**docs/ROADMAP.md**](docs/ROADMAP.md) for project direction.
+
+Prefer a chat first? Open a **[discussion](https://github.com/sausi-7/inkwell/discussions)** — ideas, persona show-and-tell, or "help me set this up."
+
+The repo's whole architecture is designed around **plain Python protocols** (structural typing, no inheritance), **one YAML per concept** (persona, filters, subreddits), and **plain HTML/CSS/JS** (no build step, no framework). Easy to read, easy to fork, easy to extend.
 
 ---
 
 ## License
 
-[AGPL-3.0](LICENSE) — Free to use, modify, and self-host. If you build a SaaS on top, you must open-source your modifications.
+[MIT](LICENSE) — do whatever you want with this, including commercial use and forks. Just keep the copyright line.
 
 ---
 
@@ -380,4 +421,4 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 Built by [Saurabh Singh](https://github.com/sausi-7). Originally started as a Reddit outreach script, now growing into a full outreach intelligence platform.
 
-If OutreachPilot helps you find great conversations, consider starring the repo and sharing it with other entrepreneurs.
+If Inkwell helps you find great conversations, consider starring the repo and sharing it with other entrepreneurs.

@@ -3,20 +3,20 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "outreachpilot"
+name = "inkwell"
 version = "0.1.0"
-description = "Open source AI outreach intelligence tool for entrepreneurs"
+description = "Self-hosted, BYOK outreach intelligence. Scan forums free; only draft replies in your voice spend tokens."
 readme = "README.md"
-license = {text = "AGPL-3.0"}
+license = {text = "MIT"}
 requires-python = ">=3.11"
 authors = [
     {name = "Saurabh Singh"},
 ]
-keywords = ["outreach", "reddit", "ai", "marketing", "automation"]
+keywords = ["outreach", "reddit", "ai", "byok", "self-hosted", "persona", "writing", "open-source"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Internet :: WWW/HTTP",
@@ -47,10 +47,10 @@ dev = [
 ]
 
 [project.scripts]
-outreachpilot = "outreachpilot.__main__:main"
+inkwell = "inkwell.__main__:main"
 
 [tool.setuptools.packages.find]
-include = ["outreachpilot*"]
+include = ["inkwell*"]
 
 [tool.ruff]
 line-length = 100

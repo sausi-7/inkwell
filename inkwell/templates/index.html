@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Inkwell · Your voice, your key, your replies{% endblock %}
+
+{% block content %}
+<!-- ─── Hero ───────────────────────────────────────────────────────────── -->
+<section class="hero">
+  <p class="hero-kicker">Open source &middot; self-hosted &middot; BYOK</p>
+  <h1 class="hero-title">Your voice.<br>Your key. Your replies.</h1>
+  <p class="hero-subtitle">
+    Inkwell listens to forums for people actually asking for help, scores the signals for free,
+    and drafts replies only when you ask — in a voice you teach it.
+  </p>
+  <div class="hero-cta">
+    <a href="/scan" class="btn btn-primary">Run your first scan</a>
+    <a href="/profile" class="btn btn-outline">Teach it your voice</a>
+  </div>
+</section>
+
+<!-- ─── Three pillars ──────────────────────────────────────────────────── -->
+<section class="pillars">
+  <article class="pillar">
+    <div class="pillar-mark">₀</div>
+    <h3>$0 until you draft</h3>
+    <p>
+      Scanning, filtering, scoring — all zero tokens. Deterministic rules pick the signals.
+      You spend only when you click <em>Draft</em> on one worth replying to.
+    </p>
+  </article>
+  <article class="pillar">
+    <div class="pillar-mark">✒</div>
+    <h3>Sounds like you</h3>
+    <p>
+      Your persona is a first-class artifact — bio, dos, don'ts, and real example comments.
+      The model writes <em>in your voice</em>, not LLM-speak. Fork someone's. Publish your own.
+    </p>
+  </article>
+  <article class="pillar">
+    <div class="pillar-mark">⌂</div>
+    <h3>Self-hosted, no lock-in</h3>
+    <p>
+      Runs on your laptop. Your key stays in the browser, your data stays on disk.
+      Swap providers — OpenAI, Claude, Ollama, anything LiteLLM supports. Leave whenever.
+    </p>
+  </article>
+</section>
+
+<!-- ─── How it works ───────────────────────────────────────────────────── -->
+<section class="section">
+  <h2 class="section-title">How it works</h2>
+  <ol class="steps">
+    <li>
+      <span class="step-num">1</span>
+      <div>
+        <strong>Teach your voice.</strong>
+        Bio, tone, three or more real comments you've written. Takes ten minutes; pays back forever.
+      </div>
+    </li>
+    <li>
+      <span class="step-num">2</span>
+      <div>
+        <strong>Pick where to listen.</strong>
+        Subreddits, keywords, thresholds. Start with five, not fifty — quality beats breadth.
+      </div>
+    </li>
+    <li>
+      <span class="step-num">3</span>
+      <div>
+        <strong>Scan — free.</strong>
+        Rule-based scoring surfaces the <em>Yes / Maybe / No</em> signals with a transparent reason.
+        Zero tokens. Scan as often as you like.
+      </div>
+    </li>
+    <li>
+      <span class="step-num">4</span>
+      <div>
+        <strong>Draft on demand.</strong>
+        Click <em>Draft</em> on a signal. Your browser sends your key (never stored on the server);
+        a voice reply comes back in seconds. Copy, edit, send — you stay in control.
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- ─── Your setup ─────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2 class="section-title">Your setup</h2>
+  <div class="card">
+    <ul class="checklist" id="checklist">
+      <li data-step="profile">
+        <span class="check-icon" data-icon>✓</span>
+        <div>
+          <div class="check-title">Set up your profile</div>
+          <div class="check-body">Bio, dos/don'ts, and 2+ example comments. <a href="/profile">Edit profile →</a></div>
+        </div>
+      </li>
+      <li data-step="output">
+        <span class="check-icon" data-icon>✓</span>
+        <div>
+          <div class="check-title">Pick your output</div>
+          <div class="check-body">CSV-only works out of the box. Google Sheets needs a one-time OAuth. <a href="/settings">Configure output →</a></div>
+        </div>
+      </li>
+      <li data-step="llm">
+        <span class="check-icon" data-icon>✓</span>
+        <div>
+          <div class="check-title">Add your LLM key <span class="faint">(optional)</span></div>
+          <div class="check-body">Scanning is free. A key is only used when you click <em>Draft</em>. Stored in your browser only. <a href="/settings">Add key →</a></div>
+        </div>
+      </li>
+      <li data-step="subreddits">
+        <span class="check-icon" data-icon>✓</span>
+        <div>
+          <div class="check-title">Choose where to scan</div>
+          <div class="check-body">Edit your subreddit list. Start with 5–10. <a href="/settings">Edit list →</a></div>
+        </div>
+      </li>
+      <li data-step="scan">
+        <span class="check-icon" data-icon>✓</span>
+        <div>
+          <div class="check-title">Run your first scan</div>
+          <div class="check-body">See signals scored, summarized, and ranked — no tokens spent. <a href="/scan">Go to scan →</a></div>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ─── Coming next ─────────────────────────────────────────────────────── -->
+<section class="section">
+  <h2 class="section-title">Coming next</h2>
+  <p class="muted section-lead">
+    The roadmap that makes Inkwell not-just-another-outreach-tool. Opinionated picks, shipping one at a time.
+  </p>
+  <div class="roadmap">
+    <article class="roadmap-item">
+      <span class="pill pill-warn">Next</span>
+      <h4>Auto-persona from your post history</h4>
+      <p>Paste your Reddit / HN username — Inkwell fits a persona from your last 200 comments. No manual YAML. Your voice, learned from your voice.</p>
+    </article>
+    <article class="roadmap-item">
+      <span class="pill pill-warn">Next</span>
+      <h4>Daily email digest</h4>
+      <p>APScheduler-powered cron sweeps. Wake up to five signals worth replying to, delivered to your inbox.</p>
+    </article>
+    <article class="roadmap-item">
+      <span class="pill pill-muted">Soon</span>
+      <h4>Streaming drafts</h4>
+      <p>Drafts stream token-by-token instead of waiting for the whole response. Same model, way better feel.</p>
+    </article>
+    <article class="roadmap-item">
+      <span class="pill pill-muted">Soon</span>
+      <h4>Hacker News + Product Hunt scanners</h4>
+      <p>Same protocol as Reddit, ~100 LOC each. Open a PR, get merged, help the next builder find their people.</p>
+    </article>
+    <article class="roadmap-item">
+      <span class="pill pill-muted">Later</span>
+      <h4>Local fine-tuned voice model</h4>
+      <p>After 50+ approved drafts, train a LoRA adapter on a 7B model. Your voice runs locally — free drafts, forever.</p>
+    </article>
+    <article class="roadmap-item">
+      <span class="pill pill-muted">Later</span>
+      <h4>Browser extension</h4>
+      <p>A <em>Reply in my voice</em> button next to Reddit / HN comment boxes. Your local Inkwell does the rest.</p>
+    </article>
+  </div>
+  <div class="hero-cta" style="margin-top:28px;justify-content:flex-start;">
+    <a href="https://github.com/sausi-7/inkwell" target="_blank" rel="noopener" class="btn btn-outline">Star on GitHub</a>
+    <a href="https://github.com/sausi-7/inkwell/issues" target="_blank" rel="noopener" class="btn">Suggest a feature</a>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/index.js"></script>
+{% endblock %}

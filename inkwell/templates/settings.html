@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Inkwell · Settings{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Settings</h1>
+<p class="page-subtitle">Output destination, BYOK LLM key, filters, and the subreddit list.</p>
+
+<!-- ─── Output ──────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h3 class="card-title">Output</h3>
+  <p class="card-muted">Where each scan's results land. Works fully with CSV only — Sheets is optional.</p>
+
+  <div class="form-row">
+    <label><input type="radio" name="output" value="csv"> CSV only</label>
+    <label><input type="radio" name="output" value="sheets_only"> Google Sheets only</label>
+    <label><input type="radio" name="output" value="both" checked> Both</label>
+  </div>
+
+  <div class="form-row">
+    <label for="spreadsheet-id">Spreadsheet ID <span class="hint">From the Sheet's URL. Set in .env; shown here read-only.</span></label>
+    <input type="text" id="spreadsheet-id" readonly>
+  </div>
+
+  <div class="row-inline">
+    <button type="button" class="btn btn-outline" id="test-sheets">Test Google Sheets</button>
+    <span id="sheets-status" class="muted small"></span>
+  </div>
+</div>
+
+<!-- ─── LLM ─────────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h3 class="card-title">LLM (BYOK)</h3>
+  <p class="card-muted">
+    Scanning is free. This key is only used when you click "Draft" on a signal.
+    <strong>Stored in your browser only</strong> — the server never writes it to disk.
+  </p>
+
+  <div class="form-row">
+    <label for="llm-provider">Provider</label>
+    <select id="llm-provider">
+      <option value="openai">OpenAI</option>
+      <option value="claude">Claude (Anthropic)</option>
+      <option value="ollama">Ollama (local, no key)</option>
+      <option value="custom">Other (custom LiteLLM model string)</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <label for="llm-model">Model</label>
+    <input type="text" id="llm-model" placeholder="gpt-4o-mini">
+  </div>
+
+  <div class="form-row" id="llm-key-row">
+    <label for="llm-key">API key</label>
+    <input type="password" id="llm-key" placeholder="sk-…" autocomplete="off">
+    <div class="hint">Stays in your browser's localStorage. Never sent to the server except on a draft request.</div>
+  </div>
+
+  <div class="row-inline">
+    <button type="button" class="btn btn-outline" id="test-llm">Test key</button>
+    <button type="button" class="btn btn-outline" id="clear-llm">Clear key</button>
+    <span id="llm-status" class="muted small"></span>
+  </div>
+</div>
+
+<!-- ─── Filters ─────────────────────────────────────────────────────────── -->
+<div class="card">
+  <h3 class="card-title">Filters & thresholds</h3>
+  <p class="card-muted">Applied <em>before</em> scoring — so junk posts never get processed at all.</p>
+
+  <div class="form-row">
+    <label>Must include (any of) <span class="hint">Leave empty to skip.</span></label>
+    <div class="chip-group" data-chips="include">
+      <input type="text" placeholder="Type and press Enter…">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Exclude (any of)</label>
+    <div class="chip-group" data-chips="exclude">
+      <input type="text" placeholder="Type and press Enter…">
+    </div>
+  </div>
+
+  <div class="row-inline">
+    <div class="form-row" style="flex: 1;">
+      <label for="min-score">Min post score</label>
+      <input type="number" id="min-score" min="0" value="2">
+    </div>
+    <div class="form-row" style="flex: 1;">
+      <label for="min-comments">Min comments</label>
+      <input type="number" id="min-comments" min="0" value="0">
+    </div>
+    <div class="form-row" style="flex: 1;">
+      <label for="max-comments">Max comments</label>
+      <input type="number" id="max-comments" min="1" value="500">
+    </div>
+    <div class="form-row" style="flex: 1;">
+      <label for="max-age">Max age (hrs)</label>
+      <input type="number" id="max-age" min="1" value="24">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Prefer topics <span class="hint">Boost the engage score.</span></label>
+    <div class="chip-group" data-chips="prefer_topics">
+      <input type="text" placeholder="Type and press Enter…">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <label>Avoid topics <span class="hint">Any hit forces "No".</span></label>
+    <div class="chip-group" data-chips="avoid_topics">
+      <input type="text" placeholder="Type and press Enter…">
+    </div>
+  </div>
+</div>
+
+<!-- ─── Subreddits ──────────────────────────────────────────────────────── -->
+<div class="card">
+  <h3 class="card-title">Subreddits</h3>
+  <p class="card-muted">One per chip. Start with 5–10.</p>
+  <div class="form-row">
+    <div class="chip-group" data-chips="subreddits">
+      <input type="text" placeholder="e.g. indiehackers (no r/)">
+    </div>
+  </div>
+</div>
+
+<div class="row-inline mt-3">
+  <button type="button" class="btn btn-primary" id="save-settings">Save settings</button>
+  <span id="save-status" class="muted small"></span>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/settings.js"></script>
+{% endblock %}

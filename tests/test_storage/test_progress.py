@@ -1,11 +1,11 @@
-"""Tests for outreachpilot.storage.progress."""
+"""Tests for inkwell.storage.progress."""
 
 import datetime
 import json
 
 import pytest
 
-from outreachpilot.storage import progress as progress_module
+from inkwell.storage import progress as progress_module
 
 
 @pytest.fixture

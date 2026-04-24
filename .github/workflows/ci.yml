@@ -30,7 +30,7 @@ jobs:
           pip install -e ".[dev]"
 
       - name: Lint (ruff)
-        run: ruff check outreachpilot/ tests/
+        run: ruff check inkwell/ tests/
 
       - name: Test (pytest)
         run: pytest -v

@@ -1,10 +1,10 @@
-"""Tests for outreachpilot.analyzers.llm_client pure helpers.
+"""Tests for inkwell.analyzers.llm_client pure helpers.
 
 Network-hitting paths aren't tested here — the helpers below are the parts that
 have actually broken in practice (model-prefix detection, fence stripping from
 models that ignore 'no markdown' instructions)."""
 
-from outreachpilot.analyzers.llm_client import _strip_code_fences, _supports_native_json_mode
+from inkwell.analyzers.llm_client import _strip_code_fences, _supports_native_json_mode
 
 
 def test_strip_code_fences_no_op_on_plain_json():

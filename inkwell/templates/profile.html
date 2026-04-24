@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Inkwell · Profile{% endblock %}
+
+{% block content %}
+<h1 class="page-title">Your voice</h1>
+<p class="page-subtitle">This is what makes drafts sound like you. Take your time here — the quality of the output tracks the quality of this page.</p>
+
+<form id="profile-form">
+  <div class="card">
+    <h3 class="card-title">Identity</h3>
+    <div class="form-row">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="Alex">
+    </div>
+    <div class="form-row">
+      <label for="bio">Bio</label>
+      <textarea id="bio" name="bio" placeholder="Two sentences on who you are and what you build."></textarea>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Interests & expertise</h3>
+    <div class="form-row">
+      <label>Interests <span class="hint">Press Enter to add.</span></label>
+      <div class="chip-group" data-chips="interests">
+        <input type="text" placeholder="Type and press Enter…">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Expertise <span class="hint">What you can speak to with conviction.</span></label>
+      <div class="chip-group" data-chips="expertise">
+        <input type="text" placeholder="Type and press Enter…">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Tone</h3>
+    <div class="form-row">
+      <label for="tone-style">Style</label>
+      <input type="text" id="tone-style" placeholder="conversational, slightly nerdy, genuinely curious">
+    </div>
+    <div class="form-row">
+      <label for="tone-humor">Humor</label>
+      <input type="text" id="tone-humor" placeholder="dry wit, self-deprecating">
+    </div>
+    <div class="form-row">
+      <label for="tone-formality">Formality</label>
+      <input type="text" id="tone-formality" placeholder="casual but knowledgeable">
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Guidelines</h3>
+    <div class="form-row">
+      <label>Do <span class="hint">Things a reply should do.</span></label>
+      <div class="chip-group" data-chips="dos">
+        <input type="text" placeholder="Add a guideline…">
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Don't <span class="hint">Be specific — "no buzzwords" beats "sound natural".</span></label>
+      <div class="chip-group" data-chips="donts">
+        <input type="text" placeholder="Add an anti-pattern…">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">Example comments</h3>
+    <p class="card-muted">Paste 2–6 comments you'd actually write. These matter <em>more</em> than the bio.</p>
+    <div id="examples"></div>
+    <button type="button" class="btn btn-outline mt-2" id="add-example">+ Add example</button>
+  </div>
+
+  <div class="card">
+    <div class="flex-between">
+      <div>
+        <div class="card-title mb-0">Prompt preview</div>
+        <div class="card-muted small">This is exactly what the LLM sees when you click Draft.</div>
+      </div>
+      <button type="button" class="btn btn-outline" id="toggle-preview">Show / hide</button>
+    </div>
+    <pre id="prompt-preview" class="scan-log mt-2 hidden"></pre>
+  </div>
+
+  <div class="row-inline mt-3">
+    <button type="submit" class="btn btn-primary" id="save-btn">Save profile</button>
+    <span id="save-status" class="muted small"></span>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/profile.js"></script>
+{% endblock %}

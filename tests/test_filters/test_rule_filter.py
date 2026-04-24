@@ -1,6 +1,6 @@
-"""Tests for outreachpilot.filters.rule_filter."""
+"""Tests for inkwell.filters.rule_filter."""
 
-from outreachpilot.filters.rule_filter import apply_pre_filters
+from inkwell.filters.rule_filter import apply_pre_filters
 
 
 def test_no_filters_passes_everything_through(signal_factory):

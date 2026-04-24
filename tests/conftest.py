@@ -6,7 +6,7 @@ import time
 
 import pytest
 
-from outreachpilot.scanners.base import RawSignal, Reply
+from inkwell.scanners.base import RawSignal, Reply
 
 
 def make_signal(
