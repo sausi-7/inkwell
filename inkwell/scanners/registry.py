@@ -30,4 +30,4 @@ def _ensure_loaded():
         return
     _loaded = True
     # Import built-in scanners to trigger registration
-    from inkwell.scanners import reddit  # noqa: F401
+    from inkwell.scanners import hackernews, reddit  # noqa: F401

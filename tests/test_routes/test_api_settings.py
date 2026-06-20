@@ -80,3 +80,35 @@ async def test_llm_probe_works_without_header(mock_completion, client):
     # Ensure api_key was NOT passed to litellm if header was missing
     _, kwargs = mock_completion.call_args
     assert "api_key" not in kwargs
+
+
+# ------------------------------------------------------------------
+# Tests for GET /api/settings/learned
+# ------------------------------------------------------------------
+@pytest.mark.asyncio
+@patch("inkwell.storage.feedback.compute_preference_weights")
+async def test_learned_returns_top_weights(mock_weights, client):
+    mock_weights.return_value = {
+        "subreddits": {"saas": 0.8, "crypto": -0.6},
+        "keywords": {"deployment": 0.5},
+        "n_ratings": 7,
+    }
+    response = await client.get("/api/settings/learned")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["active"] is True
+    assert data["n_ratings"] == 7
+    # Sorted by absolute weight, strongest first.
+    assert data["subreddits"][0]["name"] == "saas"
+    assert data["keywords"][0]["name"] == "deployment"
+
+
+@pytest.mark.asyncio
+@patch("inkwell.storage.feedback.compute_preference_weights")
+async def test_learned_cold_start_inactive(mock_weights, client):
+    mock_weights.return_value = {"subreddits": {}, "keywords": {}, "n_ratings": 2}
+    response = await client.get("/api/settings/learned")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["active"] is False
+    assert data["n_ratings"] == 2

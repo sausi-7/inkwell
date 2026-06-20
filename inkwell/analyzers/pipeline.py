@@ -23,7 +23,12 @@ def analyze_signal(
     signal: RawSignal,
     personality: dict | None = None,
     filters: dict | None = None,
+    weights: dict | None = None,
 ) -> Analysis:
-    """Rule-based signal analysis. Never makes a network call."""
+    """Rule-based signal analysis. Never makes a network call.
+
+    `weights` (optional) folds learned rating preferences into the score; the
+    scan loop computes it once and passes the same dict for every signal.
+    """
     _ = personality  # accepted for API stability; not needed for rules
-    return analyze_rules(signal, filters=filters)
+    return analyze_rules(signal, filters=filters, weights=weights)

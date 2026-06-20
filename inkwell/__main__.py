@@ -35,6 +35,7 @@ def cmd_scan(args):
     from inkwell.analyzers.pipeline import analyze_signal
     from inkwell.exporters.google_sheets import GoogleSheetsExporter
     from inkwell.exporters.csv_exporter import CSVExporter
+    from inkwell.storage.feedback import compute_preference_weights
     from inkwell.storage.progress import load_progress, save_progress
     from inkwell.storage.signals import save_signals
 
@@ -44,6 +45,15 @@ def cmd_scan(args):
     personality = load_personality()
     filters = load_filters()
     max_age = get_max_post_age_hours(filters)
+
+    # Learned preferences from past ratings — computed once and reused for every
+    # signal this run. Empty until the user has rated MIN_RATINGS_TO_LEARN posts.
+    weights = compute_preference_weights()
+    if weights["n_ratings"]:
+        logger.info(
+            "Learned preferences active (%d ratings, %d subreddit + %d keyword weights)",
+            weights["n_ratings"], len(weights["subreddits"]), len(weights["keywords"]),
+        )
 
     # Load subreddits
     sub_file = args.subreddits if args.subreddits else "subreddits.yml"
@@ -118,7 +128,9 @@ def cmd_scan(args):
                         continue
 
                     # Analyze with AI
-                    analysis = analyze_signal(signal, personality=personality, filters=filters)
+                    analysis = analyze_signal(
+                        signal, personality=personality, filters=filters, weights=weights
+                    )
 
                     # Calculate age
                     age_hrs = round((time.time() - signal.created_utc) / 3600, 1)

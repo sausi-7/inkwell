@@ -210,5 +210,42 @@
     }[c]));
   }
 
+  // ─── learned preferences (read-only) ─────────────────────────────────────
+  function renderWeights(items, prefix) {
+    if (!items.length) return '';
+    const chips = items.map((it) => {
+      const up = it.weight > 0;
+      const cls = up ? 'pill-ok' : 'pill-err';
+      const sign = up ? '+' : '';
+      return '<span class="pill ' + cls + '">' + escapeHtml(prefix + it.name) +
+            ' <span class="muted">' + sign + it.weight.toFixed(2) + '</span></span>';
+    });
+    return chips.join(' ');
+  }
+
+  async function loadLearned() {
+    const body = document.getElementById('learned-body');
+    if (!body) return;
+    try {
+      const data = await Ink.api('/api/settings/learned');
+      if (!data.active) {
+        body.innerHTML = 'No preferences learned yet — rate at least ' +
+          data.min_ratings + ' signals (you have ' + data.n_ratings +
+          '). Liked posts boost similar ones; disliked posts demote them.';
+        return;
+      }
+      let html = '<div class="muted small mb-2">Learned from ' + data.n_ratings +
+        ' rating(s). Green = boosted, red = demoted.</div>';
+      const subs = renderWeights(data.subreddits, 'r/');
+      const kws = renderWeights(data.keywords, '');
+      if (subs) html += '<div class="mb-2"><strong>Subreddits</strong><br>' + subs + '</div>';
+      if (kws) html += '<div><strong>Keywords</strong><br>' + kws + '</div>';
+      body.innerHTML = html;
+    } catch (e) {
+      body.textContent = 'Could not load learned preferences: ' + e.message;
+    }
+  }
+
   load().catch((e) => Ink.toast('Load failed: ' + e.message, true));
+  loadLearned();
 })();

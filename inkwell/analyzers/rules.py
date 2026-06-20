@@ -68,8 +68,47 @@ def _topic_hit(topic: str, searchable: str) -> bool:
     return any(w in searchable for w in words)
 
 
-def score_breakdown(signal: RawSignal, filters: dict | None = None) -> dict:
-    """Transparent per-component score. Exposed so the UI can show 'why' graphically."""
+# How hard learned preferences can pull the score, in points. The raw learned
+# weight is in [-1, +1] (see storage.feedback.compute_preference_weights); we
+# scale by this so it nudges rather than overrides the base heuristic.
+LEARNED_BONUS_SCALE = 2.0
+
+
+def _learned_bonus(signal: RawSignal, weights: dict | None) -> float:
+    """Score nudge derived from the user's past ratings (free — no LLM).
+
+    `weights` is the output of storage.feedback.compute_preference_weights().
+    Combines the subreddit weight with the mean of matched keyword weights,
+    scaled and clamped to ±LEARNED_BONUS_SCALE. Empty/None weights → 0.0, so
+    this is a no-op until enough ratings exist (cold start).
+    """
+    if not weights:
+        return 0.0
+    sub = (signal.metadata or {}).get("subreddit", "").lower()
+    raw = (weights.get("subreddits", {}) or {}).get(sub, 0.0)
+
+    kw_weights = weights.get("keywords", {}) or {}
+    if kw_weights:
+        # Match on whole-word tokens (>3 chars), the same tokenization the
+        # weights were built from in storage.feedback — so "art" can't match
+        # inside "start".
+        tokens = set(re.findall(r"[a-z0-9]+", (signal.title + " " + (signal.body or "")).lower()))
+        hits = [w for kw, w in kw_weights.items() if kw in tokens]
+        if hits:
+            raw += sum(hits) / len(hits)
+
+    scaled = raw * LEARNED_BONUS_SCALE
+    return round(max(-LEARNED_BONUS_SCALE, min(LEARNED_BONUS_SCALE, scaled)), 2)
+
+
+def score_breakdown(
+    signal: RawSignal, filters: dict | None = None, weights: dict | None = None
+) -> dict:
+    """Transparent per-component score. Exposed so the UI can show 'why' graphically.
+
+    `weights` (optional) folds in learned preferences from past ratings; pass
+    the cached output of storage.feedback.compute_preference_weights().
+    """
     filters = filters or {}
     thresholds = filters.get("thresholds", {}) or {}
     max_age_h = thresholds.get("max_age_hours", 24)
@@ -97,14 +136,17 @@ def score_breakdown(signal: RawSignal, filters: dict | None = None) -> dict:
         "age_bonus": round(age_bonus, 2),
         "question_bonus": 1.0 if _looks_like_question(signal.title) else 0.0,
         "author_penalty": -5.0 if author_deleted else 0.0,
+        "learned_bonus": _learned_bonus(signal, weights),
     }
     breakdown["total"] = round(sum(breakdown.values()), 2)
     return breakdown
 
 
-def engage(signal: RawSignal, filters: dict | None = None) -> tuple[str, dict]:
+def engage(
+    signal: RawSignal, filters: dict | None = None, weights: dict | None = None
+) -> tuple[str, dict]:
     """Return (decision, score_breakdown). Decision ∈ {Yes, Maybe, No}."""
-    bd = score_breakdown(signal, filters)
+    bd = score_breakdown(signal, filters, weights)
 
     # Hard disqualifiers: deleted author or any avoid-topic hit.
     if bd["author_penalty"] < 0 or bd["avoid_penalty"] < 0:
@@ -127,15 +169,25 @@ def why(signal: RawSignal, decision: str, breakdown: dict) -> str:
         parts.append("avoid-topic hit")
     if breakdown["question_bonus"]:
         parts.append("looks like a question")
+    if breakdown.get("learned_bonus", 0) > 0:
+        parts.append("matches what you've liked before")
+    elif breakdown.get("learned_bonus", 0) < 0:
+        parts.append("similar to what you've passed on")
     if breakdown["author_penalty"] < 0:
         parts.append("author deleted/removed")
     parts.append(f"total {breakdown['total']}")
     return "; ".join(parts)
 
 
-def analyze_rules(signal: RawSignal, filters: dict | None = None) -> Analysis:
-    """Full rule-based analysis. Voice fields are left as placeholders."""
-    decision, bd = engage(signal, filters)
+def analyze_rules(
+    signal: RawSignal, filters: dict | None = None, weights: dict | None = None
+) -> Analysis:
+    """Full rule-based analysis. Voice fields are left as placeholders.
+
+    `weights` (optional) folds learned rating preferences into the score; pass
+    the cached output of storage.feedback.compute_preference_weights().
+    """
+    decision, bd = engage(signal, filters, weights)
     return Analysis(
         summary=summary(signal),
         coolest_comment=coolest_comment(signal),

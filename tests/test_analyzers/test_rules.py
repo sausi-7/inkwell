@@ -148,6 +148,54 @@ def test_score_breakdown_post_score_caps_at_five(signal_factory):
     assert score_breakdown(capped)["post_score"] == 5.0
 
 
+# ─── learned_bonus ──────────────────────────────────────────────────────────
+
+def test_learned_bonus_zero_without_weights(signal_factory):
+    """Cold start: no weights means scoring is unchanged."""
+    bd = score_breakdown(signal_factory(subreddit="SaaS"))
+    assert bd["learned_bonus"] == 0.0
+
+
+def test_learned_bonus_rewards_liked_subreddit(signal_factory):
+    s = signal_factory(subreddit="SaaS", title="plain", body="")
+    weights = {"subreddits": {"saas": 1.0}, "keywords": {}}
+    assert score_breakdown(s, weights=weights)["learned_bonus"] > 0
+
+
+def test_learned_bonus_penalizes_disliked_subreddit(signal_factory):
+    s = signal_factory(subreddit="crypto", title="plain", body="")
+    weights = {"subreddits": {"crypto": -1.0}, "keywords": {}}
+    assert score_breakdown(s, weights=weights)["learned_bonus"] < 0
+
+
+def test_learned_bonus_clamped_to_scale(signal_factory):
+    """Even a maxed-out subreddit + keyword match can't exceed the cap."""
+    from inkwell.analyzers.rules import LEARNED_BONUS_SCALE
+    s = signal_factory(subreddit="SaaS", title="rate limiting", body="api")
+    weights = {"subreddits": {"saas": 1.0}, "keywords": {"rate": 1.0, "limiting": 1.0}}
+    assert score_breakdown(s, weights=weights)["learned_bonus"] == LEARNED_BONUS_SCALE
+
+
+def test_learned_bonus_matches_keywords_in_body(signal_factory):
+    s = signal_factory(subreddit="unrated", title="Help with deployment", body="")
+    weights = {"subreddits": {}, "keywords": {"deployment": 0.5}}
+    assert score_breakdown(s, weights=weights)["learned_bonus"] > 0
+
+
+def test_learned_bonus_keyword_matches_whole_word_only(signal_factory):
+    """A keyword must match a whole token, not a substring ('art' ⊄ 'start')."""
+    s = signal_factory(subreddit="unrated", title="Just getting started", body="")
+    weights = {"subreddits": {}, "keywords": {"art": 1.0}}
+    assert score_breakdown(s, weights=weights)["learned_bonus"] == 0.0
+
+
+def test_why_flags_learned_preference(signal_factory):
+    s = signal_factory(subreddit="SaaS")
+    weights = {"subreddits": {"saas": 1.0}, "keywords": {}}
+    decision, bd = engage(s, weights=weights)
+    assert "liked before" in why(s, decision, bd).lower()
+
+
 # ─── why ────────────────────────────────────────────────────────────────────
 
 def test_why_includes_score_and_reply_count(signal_factory):

@@ -116,7 +116,7 @@ def get_max_post_age_hours(filters: dict) -> int:
 
 def ensure_data_dirs():
     """Create data directories if they don't exist."""
-    for subdir in ["signals", "analyses", "campaigns", "feedback", "scan_history"]:
+    for subdir in ["signals", "analyses", "feedback", "scan_history"]:
         (DATA_DIR / subdir).mkdir(parents=True, exist_ok=True)
 
 

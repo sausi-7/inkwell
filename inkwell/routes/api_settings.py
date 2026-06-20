@@ -76,6 +76,33 @@ async def save_settings(payload: SettingsPayload):
     return {"ok": True}
 
 
+# ─── learned preferences (read-only) ────────────────────────────────────────
+
+@router.get("/settings/learned")
+async def get_learned():
+    """Surface what the tool has learned from the user's ratings.
+
+    Read-only — returns the strongest boosted/penalized subreddits and keywords
+    so the learned-preference loop is visible, not invisible magic. Empty until
+    enough ratings exist (cold start).
+    """
+    from inkwell.storage.feedback import MIN_RATINGS_TO_LEARN, compute_preference_weights
+
+    weights = compute_preference_weights()
+
+    def _top(d: dict, n: int = 8) -> list[dict]:
+        items = sorted(d.items(), key=lambda kv: abs(kv[1]), reverse=True)
+        return [{"name": k, "weight": v} for k, v in items[:n] if v]
+
+    return {
+        "active": bool(weights["subreddits"] or weights["keywords"]),
+        "n_ratings": weights["n_ratings"],
+        "min_ratings": MIN_RATINGS_TO_LEARN,
+        "subreddits": _top(weights["subreddits"]),
+        "keywords": _top(weights["keywords"]),
+    }
+
+
 # ─── connection probes ─────────────────────────────────────────────────────
 
 @router.post("/settings/test-sheets")
